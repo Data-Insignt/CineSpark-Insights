@@ -8,6 +8,8 @@ services:
     volumes:
       - /root/hadoop-cluster/hadoop-config:/opt/hadoop/conf
     command: /bin/bash -c "/opt/spark/bin/start-master.sh"
+    networks:
+      - hadoop_network
 
   spark-worker:
     image: apache/spark:3.3.1
@@ -16,3 +18,9 @@ services:
     command: /bin/bash -c "/opt/spark/bin/start-worker.sh spark://spark-master:7077"
     depends_on:
       - spark-master
+    networks:
+      - hadoop_network
+
+networks:
+  hadoop_network:
+    external: true

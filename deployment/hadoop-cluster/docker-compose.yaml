@@ -1,61 +1,77 @@
 version: "2"
 services:
-   namenode:
-      image: apache/hadoop:3
-      hostname: namenode
-      container_name: namenode
-      command: /bin/bash -c "/bin/chmod -R 777 /opt/hadoop/etc/hadoop && mkdir -p /opt/hadoop/dfs/name && hdfs namenode -format -force && hdfs namenode"
-      ports:
-        - "9870:9870"
-      env_file:
-        - ./hadoop.env
-        - ./config
-      volumes:
-        - /root/hadoop-cluster/hadoop-config:/opt/hadoop/etc/hadoop
+  namenode:
+    image: apache/hadoop:3
+    hostname: namenode
+    container_name: namenode
+    command: /bin/bash -c "/bin/chmod -R 777 /opt/hadoop/etc/hadoop && mkdir -p /opt/hadoop/dfs/name && hdfs namenode -format -force && hdfs namenode"
+    ports:
+      - "9870:9870"
+    env_file:
+      - ./hadoop.env
+      - ./config
+    volumes:
+      - /root/hadoop-cluster/hadoop-config:/opt/hadoop/etc/hadoop
+    networks:
+      - hadoop_network
 
-   datanode1:
-      image: apache/hadoop:3
-      hostname: datanode1
-      container_name: datanode1
-      command: ["hdfs", "datanode"]
-      env_file:
-        - ./hadoop.env
-        - ./config
+  datanode1:
+    image: apache/hadoop:3
+    hostname: datanode1
+    container_name: datanode1
+    command: [ "hdfs", "datanode" ]
+    env_file:
+      - ./hadoop.env
+      - ./config
+    networks:
+      - hadoop_network
 
-   datanode2:
-      image: apache/hadoop:3
-      hostname: datanode2
-      container_name: datanode2
-      command: ["hdfs", "datanode"]
-      env_file:
-        - ./hadoop.env
-        - ./config
+  datanode2:
+    image: apache/hadoop:3
+    hostname: datanode2
+    container_name: datanode2
+    command: [ "hdfs", "datanode" ]
+    env_file:
+      - ./hadoop.env
+      - ./config
+    networks:
+      - hadoop_network
 
-   resourcemanager:
-      image: apache/hadoop:3
-      hostname: resourcemanager
-      container_name: resourcemanager
-      command: ["yarn", "resourcemanager"]
-      ports:
-         - "8088:8088"
-      env_file:
-        - ./hadoop.env
-        - ./config
+  resourcemanager:
+    image: apache/hadoop:3
+    hostname: resourcemanager
+    container_name: resourcemanager
+    command: [ "yarn", "resourcemanager" ]
+    ports:
+      - "8088:8088"
+    env_file:
+      - ./hadoop.env
+      - ./config
+    networks:
+      - hadoop_network
 
-   nodemanager1:
-      image: apache/hadoop:3
-      hostname: nodemanager1
-      container_name: nodemanager1
-      command: ["yarn", "nodemanager"]
-      env_file:
-        - ./hadoop.env
-        - ./config
+  nodemanager1:
+    image: apache/hadoop:3
+    hostname: nodemanager1
+    container_name: nodemanager1
+    command: [ "yarn", "nodemanager" ]
+    env_file:
+      - ./hadoop.env
+      - ./config
+    networks:
+      - hadoop_network
 
-   nodemanager2:
-      image: apache/hadoop:3
-      hostname: nodemanager2
-      container_name: nodemanager2
-      command: ["yarn", "nodemanager"]
-      env_file:
-        - ./hadoop.env
-        - ./config
+  nodemanager2:
+    image: apache/hadoop:3
+    hostname: nodemanager2
+    container_name: nodemanager2
+    command: [ "yarn", "nodemanager" ]
+    env_file:
+      - ./hadoop.env
+      - ./config
+    networks:
+      - hadoop_network
+
+networks:
+  hadoop_network:
+    external: true
