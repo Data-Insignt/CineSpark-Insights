@@ -1,6 +1,5 @@
 version: "2"
 services:
-  # Hadoop services
   namenode:
     user: "root"
     image: apache/hadoop:3
@@ -62,21 +61,22 @@ services:
       - hadoop.env
       - config
 
-
-  # Spark services
   spark-master:
     image: apache/spark:3.3.1
+    container_name: spark-master
     ports:
       - "8080:8080"
       - "7077:7077"
     volumes:
       - /root/hadoop-cluster/hadoop-config:/opt/hadoop/conf
-    command: /bin/bash -c "/opt/spark/bin/start-master.sh"
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
 
   spark-worker:
     image: apache/spark:3.3.1
+    container_name: spark-worker
     volumes:
       - /root/hadoop-cluster/hadoop-config:/opt/hadoop/conf
-    command: /bin/bash -c "/opt/spark/bin/start-worker.sh spark://spark-master:7077"
+      - /root/hadoop-cluster/spark-worker-data:/opt/spark/work
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
