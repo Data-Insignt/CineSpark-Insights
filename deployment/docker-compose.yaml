@@ -13,8 +13,6 @@ services:
       - config
     volumes:
       - /root/hadoop-cluster/hadoop-config:/opt/hadoop/etc/hadoop
-    environment:
-      HADOOP_CONF_DIR: "/opt/hadoop/etc/hadoop"
 
   datanode1:
     image: apache/hadoop:3
