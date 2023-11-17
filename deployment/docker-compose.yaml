@@ -48,18 +48,26 @@ services:
     hostname: nodemanager1
     container_name: nodemanager1
     command: [ "yarn", "nodemanager" ]
+    ports:
+      - "8042:8042"
     env_file:
       - hadoop.env
       - config
+    volumes:
+      - /root/hadoop-cluster/hadoop-config/nodemanager1:/opt/hadoop/etc/hadoop
 
   nodemanager2:
     image: apache/hadoop:3
     hostname: nodemanager2
     container_name: nodemanager2
     command: [ "yarn", "nodemanager" ]
+    ports:
+      - "8043:8042"
     env_file:
       - hadoop.env
       - config
+    volumes:
+      - /root/hadoop-cluster/hadoop-config/nodemanager2:/opt/hadoop/etc/hadoop
 
   spark-master:
     image: apache/spark:3.3.1
