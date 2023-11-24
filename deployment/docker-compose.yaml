@@ -2,7 +2,7 @@ version: "2"
 services:
   namenode:
     user: "root"
-    image: apache/hadoop:3
+    image: my-hadoop:3
     hostname: namenode
     container_name: namenode
     command: /bin/bash -c "/bin/chmod -R 777 /opt/hadoop/etc/hadoop && mkdir -p /opt/hadoop/dfs/name && hdfs namenode -format -force && hdfs namenode"
@@ -15,7 +15,7 @@ services:
       - /root/hadoop-cluster/hadoop-config:/opt/hadoop/etc/hadoop
 
   datanode1:
-    image: apache/hadoop:3
+    image: my-hadoop:3
     hostname: datanode1
     container_name: datanode1
     command: [ "hdfs", "datanode" ]
@@ -24,7 +24,7 @@ services:
       - config
 
   datanode2:
-    image: apache/hadoop:3
+    image: my-hadoop:3
     hostname: datanode2
     container_name: datanode2
     command: [ "hdfs", "datanode" ]
@@ -33,7 +33,7 @@ services:
       - config
 
   resourcemanager:
-    image: apache/hadoop:3
+    image: my-hadoop:3
     hostname: resourcemanager
     container_name: resourcemanager
     command: [ "yarn", "resourcemanager" ]
@@ -44,7 +44,7 @@ services:
       - config
 
   nodemanager1:
-    image: apache/hadoop:3
+    image: my-hadoop:3
     hostname: nodemanager1
     container_name: nodemanager1
     command: [ "yarn", "nodemanager" ]
@@ -57,7 +57,7 @@ services:
       - /root/hadoop-cluster/hadoop-config/nodemanager1:/opt/hadoop/etc/hadoop
 
   nodemanager2:
-    image: apache/hadoop:3
+    image: my-hadoop:3
     hostname: nodemanager2
     container_name: nodemanager2
     command: [ "yarn", "nodemanager" ]
