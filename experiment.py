@@ -15,7 +15,7 @@ from pyspark.sql.functions import col, collect_list, split, explode
 from pyspark.sql.functions import udf
 
 
-def read_files(filename):
+def init_spark_session_with_ratings(filename):
     """
     Reads the ratings file and returns the SparkSession and DataFrame created from the file.
 
@@ -327,7 +327,7 @@ def main():
     """
 
     filename = "dataset/ratings.csv"
-    spark, ratings_df = read_files(filename)
+    spark, ratings_df = init_spark_session_with_ratings(filename)
 
     basic_recommend(spark, ratings_df)
 
