@@ -1,19 +1,18 @@
-from pyspark.sql import SparkSession
-from pyspark.sql import Row
-from pyspark.ml.evaluation import RegressionEvaluator
-from pyspark.ml.recommendation import ALS
-from pyspark.sql import SparkSession
-from pyspark.ml.evaluation import RegressionEvaluator
-from pyspark.ml.feature import VectorAssembler
-from pyspark.ml.regression import RandomForestRegressor
-from pyspark.sql.functions import explode, col, collect_list, split, explode
-import matplotlib.pyplot as plt
-from pyspark.sql.functions import udf
-from pyspark.ml.linalg import Vectors, VectorUDT
-from pyspark.sql import functions as F
-from pyspark.ml.feature import OneHotEncoder, StringIndexer
 import time
+
+import matplotlib.pyplot as plt
 import pandas as pd
+from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.feature import OneHotEncoder, StringIndexer
+from pyspark.ml.feature import VectorAssembler
+from pyspark.ml.linalg import Vectors, VectorUDT
+from pyspark.ml.recommendation import ALS
+from pyspark.ml.regression import RandomForestRegressor
+from pyspark.sql import Row
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql.functions import col, collect_list, split, explode
+from pyspark.sql.functions import udf
 
 
 def read_files(filename):
