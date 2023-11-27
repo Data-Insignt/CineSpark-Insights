@@ -1,15 +1,17 @@
-from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql import Row
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.recommendation import ALS
 from pyspark.sql import SparkSession
 from pyspark.ml.evaluation import RegressionEvaluator
-from pyspark.ml.feature import OneHotEncoder, StringIndexer
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.regression import RandomForestRegressor
-from pyspark.sql.functions import explode, col
+from pyspark.sql.functions import explode, col, collect_list, split, explode
 import matplotlib.pyplot as plt
+from pyspark.sql.functions import udf
+from pyspark.ml.linalg import Vectors, VectorUDT
+from pyspark.sql import functions as F
+from pyspark.ml.feature import OneHotEncoder, StringIndexer
 import time
 import pandas as pd
 
@@ -177,7 +179,6 @@ def als_recommend(spark, ratings_rdd):
     plt.close()
 
 
-
 def als_recommend_best(spark, ratings_rdd):
     """
     Performs movie recommendations using the ALS (Alternating Least Squares) model with optimal parameters.
@@ -236,56 +237,98 @@ def als_recommend_best(spark, ratings_rdd):
     plt.close()
 
 
-def random_forest_recommend(spark, ratings_file, movies_file, tags_file):
+def rf_recommend(spark, ratings_rdd):
     """
-    Perform movie recommendations using a Random Forest model.
+    Perform movie recommendations using a Random Forest model. The method involves processing movie genres and tags,
+    applying one-hot encoding, and using these features in a random forest regression model.
 
     Args:
     spark (SparkSession): SparkSession object for DataFrame operations.
-    ratings_file (str): Path to the ratings.csv file.
-    movies_file (str): Path to the movies.csv file.
-    tags_file (str): Path to the tags.csv file.
+    ratings_rdd (RDD): RDD containing movie ratings.
     """
 
+    # Converts a list of vectors into a single vector by summing up each dimension.
+    def sum_vectors(vectors):
+        return Vectors.dense(sum(v[0] for v in vectors))
+    
+    sum_vectors_udf = udf(sum_vectors, VectorUDT())
+
     # Load and preprocess datasets
-    ratings_df = spark.read.csv(ratings_file, header=True, inferSchema=True)    # Ratings: userId, movieId, rating, timestamp
-    movies_df = spark.read.csv(movies_file, header=True, inferSchema=True)    # Movies: movieId, title, genres
-    tags_df = spark.read.csv(tags_file, header=True, inferSchema=True)    # Tags: userId, movieId, tag, timestamp
+    # Convert RDD to DataFrame for easier processing
+    ratings_rdd = ratings_rdd.map(lambda r: Row(userId=int(r[0]), movieId=int(r[1]), rating=float(r[2]), timestamp=r[3]))
+    ratings_df = spark.createDataFrame(ratings_rdd, ["userId", "movieId", "rating", "timestamp"])
+    movies_df = spark.read.csv("dataset/movies.csv", header=True, inferSchema=True)    # movieId, title, genres
+    tags_df = spark.read.csv("dataset/tags.csv", header=True, inferSchema=True)    # userId, movieId, tag, timestamp
+    # genome_scores_df = spark.read.csv("dataset/genome-scores.csv", header=True, inferSchema=True)   # movieId, tagId, relevance
+    # genome_tags_df = spark.read.csv("dataset/genome-tags.csv", header=True, inferSchema=True)   # tagId, tag
 
-    # Process genres from movies dataset
-    # Using StringIndexer to convert genre strings to genre indices
-    stringIndexer = StringIndexer(inputCol="genres", outputCol="genresIndex")
-    model = stringIndexer.fit(movies_df)
-    indexed = model.transform(movies_df)
-    # Using OneHotEncoder to convert genre indices to binary vector
-    encoder = OneHotEncoder(inputCol="genresIndex", outputCol="genresVec")
-    movies_encoded = encoder.transform(indexed)
+    # Process genres: split, explode, and one-hot encode
+    movies_df = movies_df.withColumn("split_genres", split(col("genres"), "\|"))    # Split genres into individual genres
+    movies_exploded = movies_df.withColumn("genre", explode(col("split_genres")))   # Explode genres into new rows
+    genre_indexer = StringIndexer(inputCol="genre", outputCol="genreIndex")
+    indexed_genre = genre_indexer.fit(movies_exploded).transform(movies_exploded)
+    genre_encoder = OneHotEncoder(inputCol="genreIndex", outputCol="genreVec")
+    encoded_genre = genre_encoder.fit(indexed_genre).transform(indexed_genre)
 
-    # Joining tags and ratings data
-    movie_tags_df = tags_df.join(ratings_df, ["userId", "movieId"])
-    # Combining movie information with tag features
-    movie_features_df = movies_encoded.join(movie_tags_df, "movieId")
-    # Merging user ratings with movie features
-    complete_data_df = ratings_df.join(movie_features_df, "movieId")
+    # Aggregate the encoded genres back to movie level
+    genre_aggregated = encoded_genre.groupBy("movieId").agg(collect_list("genreVec").alias("genreVecList"))
+    genre_aggregated = genre_aggregated.withColumn("genresVec", sum_vectors_udf("genreVecList"))
 
-    # Feature Vectorization
+    # Process tags using StringIndexer + OneHotEncoder
+    tag_indexer = StringIndexer(inputCol="tag", outputCol="tagIndex")
+    tag_model = tag_indexer.fit(tags_df)
+    indexed_tags = tag_model.transform(tags_df)
+    tag_encoder = OneHotEncoder(inputCols=["tagIndex"], outputCols=["tagVec"])
+    tags_encoded = tag_encoder.fit(indexed_tags).transform(indexed_tags)
+
+    # Explode tag vectors into a list of features for each movie
+    movie_tags_features = tags_encoded.groupBy('movieId').agg(F.collect_list('tagVec').alias('tagVectors'))
+    movie_tags_features = movie_tags_features.withColumn('tagFeatures', sum_vectors_udf('tagVectors')).drop('tagVectors')
+
+    # Combine movie features with ratings
+    complete_data_df = ratings_df.join(genre_aggregated.select("movieId", "genresVec"), "movieId").join(movie_tags_features, "movieId")
+
+    # Create feature vectors
     assembler = VectorAssembler(inputCols=["genresVec", "tagFeatures"], outputCol="features")
     data_ready = assembler.transform(complete_data_df)
 
     # Splitting the dataset
-    (training_features, test_features) = data_ready.randomSplit([0.7, 0.3])
+    training_features, test_features = data_ready.randomSplit([0.7, 0.3])
 
     # Training the Random Forest model
     rf = RandomForestRegressor(featuresCol="features", labelCol="rating")
-    rf_model = rf.fit(training_features)
+    model = rf.fit(training_features)
 
-    # Making predictions on the test dataset
-    predictions_rf = rf_model.transform(test_features)
+    # Evaluate model on test dataset
+    predictions_df = model.transform(test_features)
+    rmse_evaluator = RegressionEvaluator(metricName="rmse", labelCol="rating", predictionCol="prediction")
+    mae_evaluator = RegressionEvaluator(metricName="mae", labelCol="rating", predictionCol="prediction")
 
-    # Evaluating the model
-    evaluator = RegressionEvaluator(labelCol="rating", predictionCol="prediction", metricName="rmse")
-    rmse = evaluator.evaluate(predictions_rf)
-    print("Root Mean Squared Error (RMSE) on test data = %g" % rmse)
+    # Calculate and output evaluation metrics
+    rmse = rmse_evaluator.evaluate(predictions_df)
+    mae = mae_evaluator.evaluate(predictions_df)
+    print(f"Root Mean Square Error (RMSE): {rmse}")
+    print(f"Mean Absolute Error (MAE): {mae}")
+
+    # Get top5 movie recommendations
+    top_predictions = predictions_df.orderBy('prediction', ascending=False).limit(5)
+
+    # Join with the movies dataframe to get movie titles
+    top_movies_with_titles = top_predictions.join(movies_df, 'movieId').select('title', 'prediction')
+
+    # Convert to pandas dataframe for visualization
+    top_movies_pd = top_movies_with_titles.toPandas()
+    top_movies_pd.set_index('title', inplace=True)
+
+    # Plot
+    plt.figure(figsize=(12, 8))
+    top_movies_pd['prediction'].plot(kind='barh')
+    plt.xlabel('Predicted Rating')
+    plt.ylabel('Movie Title')
+    plt.title('Top 5 Movie Recommendations')
+    plt.tight_layout()
+    plt.savefig('top_5_recommendations_rf.png')
+    plt.close()
 
 
 def main():
@@ -299,7 +342,9 @@ def main():
     # basic_recommend(spark, ratings_rdd)
 
     # als_recommend(spark, ratings_rdd)
-    als_recommend_best(spark, ratings_rdd)
+    # als_recommend_best(spark, ratings_rdd)
+
+    rf_recommend(spark, ratings_rdd)
 
 
 if __name__ == "__main__":
