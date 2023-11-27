@@ -17,13 +17,13 @@ from pyspark.sql.functions import udf
 
 def read_files(filename):
     """
-    Reads the ratings file and returns the SparkSession and RDD created from the file.
+    Reads the ratings file and returns the SparkSession and DataFrame created from the file.
 
     Args:
     filename (str): The path to the ratings file.
 
     Returns:
-    SparkSession, RDD: The Spark session and the RDD created from the ratings file.
+    SparkSession, DataFrame: The Spark session and the DataFrame created from the ratings file.
     """
 
     # Initialize Spark session
@@ -46,25 +46,24 @@ def read_files(filename):
     header = ratings_rdd.first()
     ratings_rdd = (ratings_rdd.filter(lambda line: line != header)
                    .map(lambda line: line.split(','))
-                   .map(lambda tokens: (tokens[0], tokens[1], float(tokens[2]), tokens[3])))
+                   .map(lambda tokens: (int(tokens[0]), int(tokens[1]), float(tokens[2]), tokens[3])))
 
     num_ratings = ratings_rdd.count()
     print(f"Number of ratings: {num_ratings}")
 
-    return spark, ratings_rdd
+    # Convert RDD to DataFrame for easier processing
+    ratings_df = spark.createDataFrame(ratings_rdd, ["userId", "movieId", "rating", "timestamp"])
+
+    return spark, ratings_df
 
 
-def basic_recommend(spark, ratings_rdd):
+def basic_recommend(spark, ratings_df):
     """
     Performs basic movie recommendation based on the average rating.
 
     Args:
-    spark (SparkSession): SparkSession object for DataFrame operations.
-    ratings_rdd (RDD): The RDD containing movie ratings.
+    ratings_df (DataFrame): The DataFrame containing movie ratings.
     """
-
-    # Convert RDD to DataFrame for easier processing
-    ratings_df = spark.createDataFrame(ratings_rdd, ["userId", "movieId", "rating", "timestamp"])
 
     # Compute the average rating for each movie
     avg_ratings_df = ratings_df.groupBy("movieId").avg("rating")
@@ -76,26 +75,25 @@ def basic_recommend(spark, ratings_rdd):
     # Plotting the top 5 movies and save the figure to a file
     top_movies_pd = top_movies.toPandas()   # Convert Spark DataFrame to Pandas DataFrame for plotting
     plt.figure(figsize=(10, 6))
-    plt.bar(top_movies_pd['movieId'], top_movies_pd['avg(rating)'])
+    # Adding width to the bars and making them visually distinct
+    plt.bar(top_movies_pd['movieId'].astype(str), top_movies_pd['avg(rating)'], width=0.5, color=['blue', 'green', 'red', 'purple', 'orange'])
     plt.xlabel('Movie ID')
     plt.ylabel('Average Rating')
     plt.title('Top 5 Movies by Average Rating')
+    plt.ylim(4, 5.1)  # Ensuring that the top of the bars are within the visible range of the plot
     plt.savefig('results/basic_recommend_top5_movies.png')
     plt.close()  # Close the plt object to free memory
+    
 
 
-def als_recommend(spark, ratings_rdd):
+def als_recommend(spark, ratings_df):
     """
     Performs movie recommendations using the ALS (Alternating Least Squares) model.
 
     Args:
     spark (SparkSession): SparkSession object for DataFrame operations.
-    ratings_rdd (RDD): The RDD containing movie ratings.
+    ratings_df (DataFrame): The DataFrame containing movie ratings.
     """
-
-    # Convert RDD to DataFrame for easier processing
-    ratings_rdd = ratings_rdd.map(lambda r: Row(userId=int(r[0]), movieId=int(r[1]), rating=float(r[2]), timestamp=r[3]))
-    ratings_df = spark.createDataFrame(ratings_rdd, ["userId", "movieId", "rating", "timestamp"])
 
     # Split the dataset into training and test sets
     (training, test) = ratings_df.randomSplit([0.7, 0.3])
@@ -178,18 +176,14 @@ def als_recommend(spark, ratings_rdd):
     plt.close()
 
 
-def als_recommend_best(spark, ratings_rdd):
+def als_recommend_best(spark, ratings_df):
     """
     Performs movie recommendations using the ALS (Alternating Least Squares) model with optimal parameters.
 
     Args:
     spark (SparkSession): SparkSession object for DataFrame operations.
-    ratings_rdd (RDD): The RDD containing movie ratings.
+    ratings_df (DataFrame): The DataFrame containing movie ratings.
     """
-
-    # Convert RDD to DataFrame for easier processing
-    ratings_rdd = ratings_rdd.map(lambda r: Row(userId=int(r[0]), movieId=int(r[1]), rating=float(r[2]), timestamp=r[3]))
-    ratings_df = spark.createDataFrame(ratings_rdd, ["userId", "movieId", "rating", "timestamp"])
 
     # Split the dataset into training and test sets
     (training, test) = ratings_df.randomSplit([0.7, 0.3])
@@ -236,14 +230,14 @@ def als_recommend_best(spark, ratings_rdd):
     plt.close()
 
 
-def rf_recommend(spark, ratings_rdd):
+def rf_recommend(spark, ratings_df):
     """
     Perform movie recommendations using a Random Forest model. The method involves processing movie genres and tags,
     applying one-hot encoding, and using these features in a random forest regression model.
 
     Args:
     spark (SparkSession): SparkSession object for DataFrame operations.
-    ratings_rdd (RDD): RDD containing movie ratings.
+    ratings_df (DataFrame): DataFrame containing movie ratings.
     """
 
     # Converts a list of vectors into a single vector by summing up each dimension.
@@ -253,9 +247,6 @@ def rf_recommend(spark, ratings_rdd):
     sum_vectors_udf = udf(sum_vectors, VectorUDT())
 
     # Load and preprocess datasets
-    # Convert RDD to DataFrame for easier processing
-    ratings_rdd = ratings_rdd.map(lambda r: Row(userId=int(r[0]), movieId=int(r[1]), rating=float(r[2]), timestamp=r[3]))
-    ratings_df = spark.createDataFrame(ratings_rdd, ["userId", "movieId", "rating", "timestamp"])
     movies_df = spark.read.csv("dataset/movies.csv", header=True, inferSchema=True)    # movieId, title, genres
     tags_df = spark.read.csv("dataset/tags.csv", header=True, inferSchema=True)    # userId, movieId, tag, timestamp
     # genome_scores_df = spark.read.csv("dataset/genome-scores.csv", header=True, inferSchema=True)   # movieId, tagId, relevance
@@ -321,12 +312,12 @@ def rf_recommend(spark, ratings_rdd):
 
     # Plot
     plt.figure(figsize=(12, 8))
-    top_movies_pd['prediction'].plot(kind='barh')
+    top_movies_pd['prediction'].plot(kind='bar')
     plt.xlabel('Predicted Rating')
     plt.ylabel('Movie Title')
     plt.title('Top 5 Movie Recommendations')
     plt.tight_layout()
-    plt.savefig('top_5_recommendations_rf.png')
+    plt.savefig('rf_recommend_top5_movies.png')
     plt.close()
 
 
@@ -336,14 +327,14 @@ def main():
     """
 
     filename = "dataset/ratings.csv"
-    spark, ratings_rdd = read_files(filename)
+    spark, ratings_df = read_files(filename)
 
-    # basic_recommend(spark, ratings_rdd)
+    basic_recommend(spark, ratings_df)
 
-    # als_recommend(spark, ratings_rdd)
-    # als_recommend_best(spark, ratings_rdd)
+    # als_recommend(spark, ratings_df)
+    # als_recommend_best(spark, ratings_df)
 
-    rf_recommend(spark, ratings_rdd)
+    # rf_recommend(spark, ratings_df)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,6 @@
+1.抽取特征
+# Select features and labels
+df_X = df.select(["userId", "movieId"] + genres_col_names + ["timestamp"])
+df_y = df.select(["rating"])
+time：2m48.9s
+Root Mean Squared Error (RMSE) on test data = 1.03567
