@@ -217,45 +217,23 @@ def als_recommend_best(spark, ratings_rdd):
 
     # Prepare data for visualization
     recs_exploded = recommendations.withColumn("rec_exp", explode("recommendations")).select("userId", col("rec_exp.movieId"), col("rec_exp.rating"))
-    recs_pd = recs_exploded.toPandas()
+    movies_df = spark.read.csv("dataset/movies.csv", header=True, inferSchema=True)    # Movies: movieId, title, genres
+    recs_joined = recs_exploded.join(movies_df, "movieId").select("userId", "title", "rating")
+    recs_pd = recs_joined.toPandas()
 
-    # Plotting the number of times each movie is recommended
-    plt.figure(figsize=(10, 6))
-    recs_pd['movieId'].value_counts().head(5).plot(kind='bar')
-    plt.xlabel('Movie ID')
+    # Count the number of recommendations for each movie and get the top 5
+    top_movies = recs_pd['title'].value_counts().head(5)
+
+    # Plotting the number of times each movie is recommended using the movie titles
+    plt.figure(figsize=(12, 8))
+    top_movies.plot(kind='bar')
+    plt.xlabel('Movie Title')  # Changed from 'Movie ID' to 'Movie Title'
     plt.ylabel('Number of Recommendations')
-    plt.title('Top 5 Recommended Movies')
+    plt.title('Top 5 Recommended Movies by ALS Model')
+    plt.xticks(rotation=45, ha='right')  # Rotate the x-axis labels for better readability
+    plt.tight_layout()  # Adjust the layout to fit the labels
     plt.savefig('results/als_recommended_top5_movies.png')
     plt.close()
-
-
-
-def visualize_recommendations(recommendations):
-    """
-    Visualizes the top 5 movie recommendations for each user.
-
-    Args:
-    recommendations (DataFrame): The DataFrame containing the recommendations.
-    """
-    # Explode the recommendations to create a row for each movie
-    recs_exploded = recommendations.withColumn("rec_exp", explode("recommendations")).select("userId", col("rec_exp.movieId"), col("rec_exp.rating"))
-
-    # Convert to Pandas DataFrame for easier manipulation
-    recs_pd = recs_exploded.toPandas()
-
-    # Aggregate to find the most recommended movies
-    top_movies = recs_pd['movieId'].value_counts().head(5)
-    top_movies_df = pd.DataFrame({'movieId': top_movies.index, 'count': top_movies.values})
-
-    # Plotting
-    plt.figure(figsize=(10, 6))
-    plt.bar(top_movies_df['movieId'].astype(str), top_movies_df['count'])
-    plt.xlabel('Movie ID')
-    plt.ylabel('Number of Recommendations')
-    plt.title('Top 5 Recommended Movies')
-    plt.savefig('top_5_recommended_movies.png')
-    plt.close()
-
 
 
 def random_forest_recommend(spark, ratings_file, movies_file, tags_file):
