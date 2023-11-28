@@ -12,7 +12,7 @@ services:
       - hadoop.env
       - config
     volumes:
-      - /root/hadoop-cluster/hadoop-config:/opt/hadoop/etc/hadoop
+      - /root/CineSpark-Insights/deployment/volumes/hadoop-config:/opt/hadoop/etc/hadoop
 
   datanode1:
     image: my-hadoop:3
@@ -42,6 +42,8 @@ services:
     env_file:
       - hadoop.env
       - config
+    volumes:
+      - /root/CineSpark-Insights/deployment/volumes/hadoop-config/resourcemanager:/opt/hadoop/etc/hadoop
 
   nodemanager1:
     image: my-hadoop:3
@@ -54,7 +56,7 @@ services:
       - hadoop.env
       - config
     volumes:
-      - /root/hadoop-cluster/hadoop-config/nodemanager1:/opt/hadoop/etc/hadoop
+      - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager1:/opt/hadoop/etc/hadoop
 
   nodemanager2:
     image: my-hadoop:3
@@ -67,7 +69,7 @@ services:
       - hadoop.env
       - config
     volumes:
-      - /root/hadoop-cluster/hadoop-config/nodemanager2:/opt/hadoop/etc/hadoop
+      - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager2:/opt/hadoop/etc/hadoop
 
   spark-master:
     image: my-spark:3.3.1
@@ -76,8 +78,9 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - /root/hadoop-cluster/spark-config:/opt/spark/conf
-      - /root/hadoop-cluster/hadoop-config:/opt/hadoop/conf
+      - /root/CineSpark-Insights/deployment/volumes/spark-config:/opt/spark/conf
+      - /root/CineSpark-Insights/deployment/volumes/hadoop-config:/opt/hadoop/conf
+      - /root/CineSpark-Insights/deployment/volumes/spark-workdir:/opt/spark/work-dir
     environment:
       SPARK_HOME: "/opt/spark"
       HADOOP_CONF_DIR: "/opt/hadoop/conf"
