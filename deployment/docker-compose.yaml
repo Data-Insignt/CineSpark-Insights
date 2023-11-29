@@ -32,6 +32,24 @@ services:
       - hadoop.env
       - config
 
+  datanode3:
+    image: my-hadoop:3
+    hostname: datanode3
+    container_name: datanode3
+    command: [ "hdfs", "datanode" ]
+    env_file:
+      - hadoop.env
+      - config
+
+  datanode4:
+    image: my-hadoop:3
+    hostname: datanode4
+    container_name: datanode4
+    command: [ "hdfs", "datanode" ]
+    env_file:
+      - hadoop.env
+      - config
+
   resourcemanager:
     image: my-hadoop:3
     hostname: resourcemanager
@@ -72,6 +90,34 @@ services:
     volumes:
       - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager2:/opt/hadoop/etc/hadoop
       - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager2-data:/data
+
+  nodemanager3:
+    image: my-hadoop:3
+    hostname: nodemanager3
+    container_name: nodemanager3
+    command: [ "yarn", "nodemanager" ]
+    ports:
+      - "8044:8042"
+    env_file:
+      - hadoop.env
+      - config
+    volumes:
+      - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager3:/opt/hadoop/etc/hadoop
+      - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager3-data:/data
+
+  nodemanager4:
+    image: my-hadoop:3
+    hostname: nodemanager4
+    container_name: nodemanager4
+    command: [ "yarn", "nodemanager" ]
+    ports:
+      - "8045:8042"
+    env_file:
+      - hadoop.env
+      - config
+    volumes:
+      - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager4:/opt/hadoop/etc/hadoop
+      - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager4-data:/data
 
   spark-master:
     image: my-spark:3.3.1

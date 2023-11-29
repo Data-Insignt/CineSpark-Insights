@@ -1,0 +1,5 @@
+Model,Run Mode,RMSE (Root Mean Square Error),MAE (Mean Absolute Error),Execution Time (seconds)
+ALS,Cluster Mode (4 executors),0.8082619664777854,0.6119144984255408,172.24
+ALS,Local Mode,0.8106900434939418,0.6157435144136638,496.82
+RF,Cluster Mode (4 executors),,,
+RF,Local Mode,,,
