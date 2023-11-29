@@ -1,0 +1,22 @@
+运行命令：
+
+/opt/spark/bin/spark-submit --master yarn \
+--driver-memory 4g \
+--executor-memory 4g \
+--executor-cores 4 \
+--num-executors 4 \
+/opt/spark/work-dir/CineSpark-Insights/experiment.py
+
+
+ALS 运行结果：
+
+Root Mean Square Error (RMSE): 0.8079965124851952
+Mean Absolute Error (MAE): 0.6119933160614277
+ALS Recommendation Execution Time: 171.69695949554443 seconds
+
+
+RF 运行结果：
+
+
+
+
