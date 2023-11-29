@@ -57,6 +57,7 @@ services:
       - config
     volumes:
       - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager1:/opt/hadoop/etc/hadoop
+      - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager1-data:/data
 
   nodemanager2:
     image: my-hadoop:3
@@ -70,6 +71,7 @@ services:
       - config
     volumes:
       - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager2:/opt/hadoop/etc/hadoop
+      - /root/CineSpark-Insights/deployment/volumes/hadoop-config/nodemanager2-data:/data
 
   spark-master:
     image: my-spark:3.3.1
