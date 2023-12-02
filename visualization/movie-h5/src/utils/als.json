@@ -1,0 +1,10 @@
+[
+{"rank":"10","maxIter":"5","regParam":"0.01","RMSE":"0.828753268","MAE":"0.637519874","Training Time":"135.4000137"},
+{"rank":"10","maxIter":"5","regParam":"0.1","RMSE":"0.823786874","MAE":"0.642213248","Training Time":"114.4969609"},
+{"rank":"10","maxIter":"10","regParam":"0.01","RMSE":"0.809061884","MAE":"0.617944706","Training Time":"103.2682035"},
+{"rank":"10","maxIter":"10","regParam":"0.1","RMSE":"0.813369919","MAE":"0.630589869","Training Time":"100.3452837"},
+{"rank":"20","maxIter":"5","regParam":"0.01","RMSE":"0.823394491","MAE":"0.625866901","Training Time":"105.7641156"},
+{"rank":"20","maxIter":"5","regParam":"0.1","RMSE":"0.834964337","MAE":"0.658030259","Training Time":"118.4804318"},
+{"rank":"20","maxIter":"10","regParam":"0.01","RMSE":"0.814891179","MAE":"0.615877111","Training Time":"121.5995686"},
+{"rank":"20","maxIter":"10","regParam":"0.1","RMSE":"0.812849779","MAE":"0.632794124","Training Time":"117.9288809"}
+]
