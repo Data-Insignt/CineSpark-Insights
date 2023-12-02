@@ -29,13 +29,43 @@ CineSpark Insights/
 └── results/                - Output results, figures, and analysis
 ```
 
-## Detailed Analysis in `experiment.ipynb`
+## Detailed Analysis in [experiment.ipynb](experiment.ipynb)
 - **Environment Import**: Setting up the necessary environment for data processing.
 - **Part 1: Init Spark Session with Ratings**: Starting Spark session and loading the ratings data.
 - **Part 2: Basic Recommend with Visualization**: Implementing a basic recommendation system and visualizing the results.
 - **Part 3: ALS Recommend with Visualization**: Advanced recommendations using the ALS model, accompanied by visualizations.
 - **Part 4: RF Recommend with Visualization**: Implementing and visualizing recommendations using the Random Forest model.
 - **Part 5: Model Comparison**: Comparing the effectiveness of the ALS and RF models.
+
+## Docker Compose Configuration for Hadoop and Spark Cluster
+
+The CineSpark Insights project includes a Docker Compose file [docker-compose.yaml](deployment/docker-compose.yaml) to easily set up a distributed Hadoop and Spark environment. This configuration allows for a scalable and efficient way to process large datasets and run Spark jobs.
+
+### Overview
+- The configuration defines multiple services including a Hadoop NameNode, DataNodes, a ResourceManager, NodeManagers, and a Spark Master.
+- Each service is containerized using Docker, ensuring isolation and ease of deployment.
+- The setup includes port forwarding and volume mappings for seamless integration and data persistence.
+
+### Services
+1. **Namenode**: The master node of the Hadoop cluster managing the metadata of the Hadoop filesystem.
+2. **Datanodes (datanode1, datanode2, datanode3, datanode4)**: Worker nodes in Hadoop storing data and performing computations.
+3. **Resourcemanager**: Manages the resources and scheduling of tasks in the Hadoop cluster.
+4. **Nodemanager (nodemanager1, nodemanager2, nodemanager3, nodemanager4)**: Manages resources on a single node and handles the execution of tasks.
+5. **Spark Master**: Coordinates and manages the Spark cluster operations.
+
+### Configuration Details
+- **Image Version**: Hadoop and Spark services use custom Docker images (my-hadoop:3 and my-spark:3.3.1).
+- **Environment Configuration**: Environment variables and configurations are managed through `hadoop.env` and `config` files.
+- **Ports**: Ports are exposed for accessing Hadoop and Spark web UIs and services.
+- **Volumes**: Mapped to persist configuration and data across container restarts.
+
+### Running the Cluster
+1. Install Docker and Docker Compose.
+2. Navigate to the `deployment/` directory where the `docker-compose.yaml` file is located.
+3. Run `docker-compose up` to start the cluster.
+4. Access the Hadoop and Spark UIs via the exposed ports to monitor the cluster and job execution.
+
+This Docker Compose setup is integral to the CineSpark Insights project, providing a robust and flexible environment for big data processing and analysis.
 
 
 ### Dataset Overview
