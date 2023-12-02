@@ -1,14 +1,45 @@
 # CineSpark Insights
 
 ## Overview
-CineSpark Insights is a data-driven project aimed at providing deep insights into the world of movies. Utilizing the power of Apache Spark, this project analyzes the [MovieLens 25M Dataset](https://grouplens.org/datasets/movielens/25m/) to uncover patterns and predictions in movie ratings and preferences.
+CineSpark Insights is a data-driven project focused on providing in-depth insights into the cinematic world. Leveraging Apache Spark, this project processes the MovieLens 25M Dataset to reveal patterns and trends in movie ratings and preferences.
 
 ### Objectives
-- To perform extensive data analysis and manipulation using Spark RDDs and DataFrames.
-- To build and compare machine learning models using Spark MLlib for predicting movie ratings.
-- To gain actionable insights through data visualizations and model predictions.
+- To conduct thorough data analysis using Spark RDDs and DataFrames.
+- To develop and compare machine learning models, specifically ALS and Random Forest, for predicting movie ratings.
+- To derive actionable insights through advanced data visualizations and predictive modeling.
 
-###  Dataset
+## Project Structure
+```
+CineSpark Insights/
+│
+│
+├── experiment.ipynb        - Comprehensive overall code notebook detailing the project workflow
+│
+├── deployment/             - Spark and Hadoop deployment configuration
+│   ├── images/             - Docker images for Hadoop and Spark
+│   ├── config/             - Configuration files for Hadoop cluster
+│   ├── docker-compose.yaml - Docker Compose configuration for the cluster
+│
+├── model/                  - Source code for the recommendation models
+│   ├── als.py              - Alternating Least Squares model implementation
+│   ├── rf.py               - Random Forest model implementation
+│
+├── dataset/                - MovieLens dataset files
+├── visualization/          - Visualization scripts and web interface
+└── results/                - Output results, figures, and analysis
+```
+
+## Detailed Analysis in `experiment.ipynb`
+- **Environment Import**: Setting up the necessary environment for data processing.
+- **Part 1: Init Spark Session with Ratings**: Starting Spark session and loading the ratings data.
+- **Part 2: Basic Recommend with Visualization**: Implementing a basic recommendation system and visualizing the results.
+- **Part 3: ALS Recommend with Visualization**: Advanced recommendations using the ALS model, accompanied by visualizations.
+- **Part 4: RF Recommend with Visualization**: Implementing and visualizing recommendations using the Random Forest model.
+- **Part 5: Model Comparison**: Comparing the effectiveness of the ALS and RF models.
+
+
+### Dataset Overview
+The project uses various components of the MovieLens 25M Dataset, including:
 + [ratings.csv](dataset/ratings.csv)
   + Purpose: Store user ratings for movies. 
   + Format: Including userId (user ID), movieId (movie ID), rating (rating), and timestamp (timestamp). 
@@ -35,50 +66,15 @@ CineSpark Insights is a data-driven project aimed at providing deep insights int
     + [genome-tags.csv](dataset/genome-tags.csv): Provides tag IDs used in tagged genomes and their descriptions. 
   + Features: Tag Genome encodes movie attributes (such as atmosphere, thought-provoking, realistic, etc.) through tags. It is a dense matrix that provides a score for each tag for each movie.
 
-## Project Structure
-```
-CineSpark Insights/
-│
-├── src/                  - Source code for the project
-│   ├── data_processing/  - Scripts for data manipulation and processing
-│   ├── model_building/   - Machine learning models and predictions
-│   └── visualization/    - Code for data visualizations
-│
-├── data/                 - Directory for storing MovieLens dataset files
-│
-├── docs/                 - Documentation and additional resources
-│
-├── notebooks/            - Jupyter notebooks for exploratory data analysis
-│
-└── results/              - Output results and figures
-```
-
 ## Technologies Used
-- **Apache Spark**: For distributed data processing and machine learning.
-- **Python**: Primary programming language.
-- **Jupyter Notebooks**: For interactive data exploration and analysis.
-- **Other Libraries**: Matplotlib, Pandas, etc., for data manipulation and visualization.
+- **Apache Spark**: For large-scale data processing and machine learning.
+- **Python**: As the primary programming language.
+- **Docker**: For containerizing the Hadoop and Spark environment.
+- **Jupyter Notebook**: For interactive data exploration and visualization.
+- **Other Libraries**: Including Matplotlib, Pandas for data handling and visualization.
 
-## Setup and Installation
-*Instructions on setting up the project environment and installation.*
 
-```bash
-# Example steps
-$ pip install pyspark
-$ pip install jupyter
-# other necessary installations
-```
-
-## Usage
-*Instructions on how to run the project, scripts, and notebooks.*
-
-```bash
-# Example command
-$ spark-submit src/data_processing/data_processor.py
-```
-
-## Contributors
-*List of team members and contributors to the project.*
-
-## License
-*State the project license here.*
+## Running the Project
+1. **Prerequisites**: Ensure Docker, Apache Spark, and Python are installed.
+2. **Environment Setup**: Follow the instructions in the `deployment/` folder to set up the Dockerized Spark cluster.
+3. **Executing the Notebook**: Run `experiment.ipynb` for a step-by-step execution of the project, including data preprocessing, model training, and visualization.

@@ -1,3 +1,5 @@
+import time
+
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.recommendation import ALS
 from pyspark.sql import SparkSession
@@ -71,9 +73,12 @@ def main():
     # Initialize Spark session and read ratings file
     spark, ratings_df = init_spark_session_with_ratings()
 
+    time_start = time.time()
+
     # Perform movie recommendations using ALS
     als_recommend_best(ratings_df)
 
+    print(f"Time taken: {time.time() - time_start} seconds")
     spark.stop()
 
 

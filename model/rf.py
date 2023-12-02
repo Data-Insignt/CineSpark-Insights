@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.feature import StringIndexer, OneHotEncoder
@@ -127,10 +129,18 @@ def main():
     Main function to execute the movie recommendation process.
     """
 
+    # Initialize Spark session and read ratings file
     spark, ratings_df = init_spark_session_with_ratings()
+
+    start_time = time.time()
+
+    # Perform movie recommendations using Random Forest
     complete_data_df = feature_engineering(spark, ratings_df)
     predictions_df = rf_train_evaluate(complete_data_df)
     predictions_df.show()
+
+    print(f"Time taken: {time.time() - start_time} seconds")
+    spark.stop()
 
 
 if __name__ == "__main__":
